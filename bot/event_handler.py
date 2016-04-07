@@ -42,16 +42,41 @@ class RtmEventHandler(object):
 
             msg_txt = event['text']
 
-            if self.clients.is_bot_mention(msg_txt):
+            if self.clients.is_bot_mention(msg_txt) or self._is_direct_message(event['channel']):
                 txt_b = TextBlob(msg_txt)
+                noun_tags = []
+                adjc_tags = []
+                verb_tags = []
                 for sentence in txt_b.sentences:
                     for tag in sentence.tags:
-                        print tag
-                        response = self.trump_corpus.gen_text([tag[0]], 1)
-                        if response is not None:
-                            self.msg_writer.send_message(event['channel'], response)
-                            return
+                        if tag[1].startswith('NN'):
+                            noun_tags.append(tag)
+                        elif tag[1].startswith('JJ'):
+                            adjc_tags.append(tag)
+                        elif tag[1].startswith('VB'):
+                            verb_tags.append(tag)
+
+                desired_len = random.choice([1, 2, 3])
+                if len(noun_tags) > 0:
+                    response = self.trump_corpus.gen_text([(seed[0]) for seed in noun_tags], desired_len)
+                    if response is not None:
+                        self.msg_writer.send_message(event['channel'], response)
+                        return
+                if len(adjc_tags) > 0:
+                    response = self.trump_corpus.gen_text([(seed[0]) for seed in adjc_tags], desired_len)
+                    if response is not None:
+                        self.msg_writer.send_message(event['channel'], response)
+                        return
+                if len(verb_tags) > 0:
+                    response = self.trump_corpus.gen_text([(seed[0]) for seed in verb_tags], desired_len)
+                    if response is not None:
+                        self.msg_writer.send_message(event['channel'], response)
+                        return
+
 
                 # No seed match, so ask a question instead
                 question = random.choice(random.choice(self.trump_corpus.nouns_to_quest.values()))
                 self.msg_writer.send_message(event['channel'], question.raw)
+
+    def _is_direct_message(self, channel_id):
+        return channel_id.startswith('D')

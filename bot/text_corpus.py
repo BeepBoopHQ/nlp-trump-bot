@@ -27,9 +27,15 @@ class TextCorpus(object):
             return None
 
         seed_sent = random.choice(seed_sents)
-        #seed_idx = self.seq_sent.index(seed_sent)
+        seed_idx = self.seq_sent.index(seed_sent)
 
-        return seed_sent.raw
+        response_txt = ''
+        end_seed_idx = seed_idx + desired_length
+        while seed_idx < end_seed_idx:
+            response_txt += self.seq_sent[seed_idx].raw + ' '
+            seed_idx += 1
+
+        return response_txt
 
 
 def keyed_list_append(key, value, dic):
