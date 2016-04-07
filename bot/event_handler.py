@@ -1,14 +1,18 @@
 import json
 import logging
-import re
+import random
+
+from textblob import TextBlob
+from text_corpus import TextCorpus
 
 logger = logging.getLogger(__name__)
 
 
 class RtmEventHandler(object):
-    def __init__(self, slack_clients, msg_writer):
+    def __init__(self, slack_clients, msg_writer, trump_corpus):
         self.clients = slack_clients
         self.msg_writer = msg_writer
+        self.trump_corpus = trump_corpus
 
     def handle(self, event):
 
@@ -25,7 +29,7 @@ class RtmEventHandler(object):
             self._handle_message(event)
         elif event_type == 'channel_joined':
             # you joined a channel
-            self.msg_writer.write_help_message(event['channel'])
+            self.msg_writer.send_message(event['channel'], "Let's make America great again!")
         elif event_type == 'group_joined':
             # you joined a private group
             self.msg_writer.write_help_message(event['channel'])
@@ -39,14 +43,15 @@ class RtmEventHandler(object):
             msg_txt = event['text']
 
             if self.clients.is_bot_mention(msg_txt):
-                # e.g. user typed: "@pybot tell me a joke!"
-                if 'help' in msg_txt:
-                    self.msg_writer.write_help_message(event['channel'])
-                elif re.search('hi|hey|hello|howdy', msg_txt):
-                    self.msg_writer.write_greeting(event['channel'], event['user'])
-                elif 'joke' in msg_txt:
-                    self.msg_writer.write_joke(event['channel'])
-                elif 'attachment' in msg_txt:
-                    self.msg_writer.demo_attachment(event['channel'])
-                else:
-                    self.msg_writer.write_prompt(event['channel'])
+                txt_b = TextBlob(msg_txt)
+                for sentence in txt_b.sentences:
+                    for tag in sentence.tags:
+                        print tag
+                        response = self.trump_corpus.gen_text([tag[0]], 1)
+                        if response is not None:
+                            self.msg_writer.send_message(event['channel'], response)
+                            return
+
+                # No seed match, so ask a question instead
+                question = random.choice(random.choice(self.trump_corpus.nouns_to_quest.values()))
+                self.msg_writer.send_message(event['channel'], question.raw)

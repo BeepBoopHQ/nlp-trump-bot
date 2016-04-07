@@ -2,6 +2,7 @@
 
 import logging
 import os
+import dill
 
 from beepboop import resourcer
 from beepboop import bot_manager

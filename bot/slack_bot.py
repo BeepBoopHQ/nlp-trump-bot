@@ -5,6 +5,7 @@ import traceback
 from slack_clients import SlackClients
 from messenger import Messenger
 from event_handler import RtmEventHandler
+from text_corpus import gen_text_corpus
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,10 @@ class SlackBot(object):
         self.keep_running = True
         if token is not None:
             self.clients = SlackClients(token)
+
+        self.trump_corpus = gen_text_corpus('TrumpPresidentialCampaignSpeech.txt')
+        logger.debug('first trump sent: {}'.format(self.trump_corpus.seq_sent[0]))
+
 
     def start(self, resource):
         """Creates Slack Web and RTM clients for the given Resource
@@ -45,7 +50,7 @@ class SlackBot(object):
                 self.clients.rtm.server.domain))
 
             msg_writer = Messenger(self.clients)
-            event_handler = RtmEventHandler(self.clients, msg_writer)
+            event_handler = RtmEventHandler(self.clients, msg_writer, self.trump_corpus)
 
             while self.keep_running:
                 for event in self.clients.rtm.rtm_read():
