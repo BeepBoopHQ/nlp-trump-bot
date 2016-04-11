@@ -1,6 +1,8 @@
 import time
 import logging
 import traceback
+import os
+from os.path import isfile, join
 
 from slack_clients import SlackClients
 from messenger import Messenger
@@ -26,7 +28,12 @@ class SlackBot(object):
         if token is not None:
             self.clients = SlackClients(token)
 
-        self.trump_corpus = gen_text_corpus('TrumpPresidentialCampaignSpeech.txt')
+        training_files = []
+        for f in os.listdir('resources/training'):
+             if isfile(join('resources/training', f)):
+                 training_files.append(join('resources/training', f))
+
+        self.trump_corpus = gen_text_corpus(training_files)
         logger.debug('first trump sent: {}'.format(self.trump_corpus.seq_sent[0]))
 
 
@@ -59,7 +66,7 @@ class SlackBot(object):
                     except:
                         err_msg = traceback.format_exc()
                         logging.error('Unexpected error: {}'.format(err_msg))
-                        msg_writer.write_error(event['channel'], err_msg)
+                        # ignore: msg_writer.write_error(event['channel'], err_msg)
                         continue
 
                 self._auto_ping()

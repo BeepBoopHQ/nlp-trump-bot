@@ -21,10 +21,10 @@ class RtmEventHandler(object):
 
     def _handle_by_type(self, event_type, event):
         # See https://api.slack.com/rtm for a full list of events
-        if event_type == 'error':
+        # if event_type == 'error':
             # error
-            self.msg_writer.write_error(event['channel'], json.dumps(event))
-        elif event_type == 'message':
+            # ignore self.msg_writer.write_error(event['channel'], json.dumps(event))
+        if event_type == 'message':
             # message was sent to channel
             self._handle_message(event)
         elif event_type == 'channel_joined':
@@ -55,21 +55,25 @@ class RtmEventHandler(object):
                             adjc_tags.append(tag)
                         elif tag[1].startswith('VB'):
                             verb_tags.append(tag)
+                logger.debug('nouns {}, adj {}, verbs {}'.format(noun_tags, adjc_tags, verb_tags))
 
                 desired_len = random.choice([1, 2, 3])
                 if len(noun_tags) > 0:
                     response = self.trump_corpus.gen_text([(seed[0]) for seed in noun_tags], desired_len)
                     if response is not None:
+                        logger.debug('Sending noun message' + response)
                         self.msg_writer.send_message(event['channel'], response)
                         return
                 if len(adjc_tags) > 0:
                     response = self.trump_corpus.gen_text([(seed[0]) for seed in adjc_tags], desired_len)
                     if response is not None:
+                        logger.debug('Sending adj message' + response)
                         self.msg_writer.send_message(event['channel'], response)
                         return
                 if len(verb_tags) > 0:
                     response = self.trump_corpus.gen_text([(seed[0]) for seed in verb_tags], desired_len)
                     if response is not None:
+                        logger.debug('Sending verb message' + response)
                         self.msg_writer.send_message(event['channel'], response)
                         return
 

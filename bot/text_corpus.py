@@ -46,31 +46,33 @@ def keyed_list_append(key, value, dic):
     return dic
 
 
-def gen_text_corpus(src_file):
-    with open('resources/'+src_file, 'r') as myfile:
-        speech_txt = myfile.read().replace('\n', ' ').replace('’', '\'').replace('“', '"').replace('”', '"').replace('—', '-')
-
-    speech_txt = speech_txt.decode('ascii', errors="replace")
-
-    txt_b = TextBlob(speech_txt)
+def gen_text_corpus(file_paths):
     indexed_verbs = {}
     indexed_nouns = {}
     indexed_adjct = {}
     noun_to_quest = {}
     seq_sentences = []
-    for sentence in txt_b.sentences:
-        if len(sentence.words) > 2:
-            seq_sentences.append(sentence)
-            #print "{}\n\t{}".format(sentence, sentence.tags)
-            for tag in sentence.tags:
-                if tag[1].startswith('VB'):
-                    keyed_list_append(tag[0], sentence, indexed_verbs)
-                if tag[1].startswith('NN'):
-                    keyed_list_append(tag[0], sentence, indexed_nouns)
-                    if sentence.ends_with('?'):
-                        keyed_list_append(tag[0], sentence, noun_to_quest)
-                if tag[1].startswith('JJ'):
-                    keyed_list_append(tag[0], sentence, indexed_adjct)
+
+    for f in file_paths:
+        with open(f, 'r') as myfile:
+            speech_txt = myfile.read().replace('\n', ' ').replace('’', '\'').replace('“', '"').replace('”', '"').replace('—', '-')
+
+        speech_txt = speech_txt.decode('ascii', errors="replace")
+
+        txt_b = TextBlob(speech_txt)
+        for sentence in txt_b.sentences:
+            if len(sentence.words) > 2:
+                seq_sentences.append(sentence)
+                #print "{}\n\t{}".format(sentence, sentence.tags)
+                for tag in sentence.tags:
+                    if tag[1].startswith('VB'):
+                        keyed_list_append(tag[0], sentence, indexed_verbs)
+                    if tag[1].startswith('NN'):
+                        keyed_list_append(tag[0], sentence, indexed_nouns)
+                        if sentence.ends_with('?'):
+                            keyed_list_append(tag[0], sentence, noun_to_quest)
+                    if tag[1].startswith('JJ'):
+                        keyed_list_append(tag[0], sentence, indexed_adjct)
 
     textCorpus = TextCorpus(seq_sentences, indexed_nouns, indexed_adjct, indexed_verbs, noun_to_quest)
 
